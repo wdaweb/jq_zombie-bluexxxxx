@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+  <style>
+    #bg {
+      background: url(./grave.jpg) no-repeat center / cover;
+    }
+
+    #btn-start {
+      width: 50px;
+      height: 50px;
+      background: lightskyblue;
+      font-weight: bold;
+      color: green;
+    }
+
+    #btn-start:hover {
+      cursor: pointer;
+    }
+
+    p {
+      color: red;
+      font-size: 16px;
+      font-weight: bold;
+    }
+
+    #game {
+      width: 1600px;
+      height: 768px;
+      margin: auto;
+      /* 遊戲範圍 */
+      background: rgba(255, 255, 255, 0.2);
+      overflow: hidden;
+      position: relative;
+      /* 要調中心點 圖片是100 100 中心點是50 50 */
+      cursor: url(./cursor_black.png) 50 50, auto;
+    }
+
+    #game img {
+      height: 150px;
+      position: absolute;
+      /* 無法被選取 */
+      user-select: none;
+      /* 無法拖曳 */
+      -webkit-user-drag: none;
+      -webkit-user-select: none;
+    }
+
+    .zombie:hover,
+    .hourglass:hover,
+    .robot:hover {
+      cursor: url(./cursor.png) 50 50, auto;
+    }
+
+    .blood {
+      /* 忽略點擊事件 */
+      pointer-events: none;
+    }
+
+    .gas {
+      pointer-events: none;
+    }
+  </style>
+</head>
+
+<body>
+  <input type="button" value="開始" id="btn-start">
+  <br>
+  <p>分數:<span id='text-score'>0</span>分</p>
+  <p>剩餘:<span id='text-time'>0</span>秒</p>
+  <hr>
+  <div id="bg">
+    <div id="game"></div>
+  </div>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"
+    integrity="sha512-894YE6QWD5I59HgZOGReFYm4dnWc1Qt5NtvYSaNcOP+u1T9qYdvdihz0PPSiiqn/+/3e7Jo4EaG7TubfWGUrMQ=="
+    crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <script>
+    let score = 0
+    let countdown = 30
+    let timer = 0
+
+    function move(zombie) {
+      const top = Math.round(Math.random() * 70) + '%'
+      const left = Math.round(Math.random() * 70) + '%'
+      zombie.stop().animate({ top, left }, 2000, function () {
+        move(zombie)
+      })
+    }
+    $("#btn-start").click(function () {
+      // 停用按鈕
+      $(this).attr('disabled', true)
+      // 重設
+      score = 0
+      $('#text-score').text(score)
+      countdown = 30
+      $('text-time').text(countdown)
+
+      // 開始遊戲
+      timer = setInterval(function () {
+        // 倒數
+        countdown--
+        $('#text-time').text(countdown)
+
+        const random = Math.round(Math.random() * 9)
+        const random2 = Math.round(Math.random() * 9)
+        const random3 = Math.round(Math.random() * 9)
+        const random4 = Math.round(Math.random() * 9)
+        if (random > 5 && $('#game .zombie').length < 5) {
+          const top = Math.round(Math.random() * 70) + '%'
+          const left = Math.round(Math.random() * 70) + '%'
+          // 生成的時候放進變數
+          const zombie = $(`<img src="./1.gif" class="zombie" style="top:${top};left:${left}">`)
+          $('#game').append(zombie)
+          move(zombie)
+        }
+        if (random2 > 8 && $('#game .hourglass').length < 3) {
+          const top2 = Math.round(Math.random() * 70) + '%'
+          const left2 = Math.round(Math.random() * 70) + '%'
+          const hourglass = $(`<img src="./hourglass.png" class="hourglass" style="top:${top2};left:${left2}">`)
+          $('#game').append(hourglass)
+        }
+
+        if (random3 > 7 && $('#game .robot').length < 2) {
+          const top3 = Math.round(Math.random() * 70) + '%'
+          const left3 = Math.round(Math.random() * 70) + '%'
+          const robot = $(`<img src="./2.gif" class="robot" style="top:${top3};left:${left3}">`)
+          $('#game').append(robot)
+          move(robot)
+        }
+
+        if (random4 > 7 && $('#game .human').length < 3) {
+          const top4 = Math.round(Math.random() * 70) + '%'
+          const left4 = Math.round(Math.random() * 70) + '%'
+          const human = $(`<img src="./3.gif" class="human" style="top:${top4};left:${left4}">`)
+          $('#game').append(human)
+          move(human)
+        }
+
+        if (countdown <= 0) {
+          clearInterval(timer)
+          // 清空遊戲區域
+          $('#game img').remove()
+          // 重新啟用開始按鈕
+          $('#btn-start').attr('disabled', false)
+          Swal.fire({
+            title: '遊戲結束',
+            text: `時間到，你得到 ${score} 分`,
+            icon: 'info'
+          })
+        }
+      }, 1000)
+    })
+
+
+
+
+    $('#game').on('click', '.zombie', function () {
+      $(this).attr('src', './blood.png')
+      $(this).removeClass('zombie').addClass('blood')
+      $(this).stop()
+      score++
+      $('.blood').fadeOut(2000)
+      $('#text-score').text(score)
+    })
+
+    $('#game').on('click', '.hourglass', function () {
+      $(this).removeClass('hourglass')
+      $(this).fadeOut(500)
+      countdown += 6
+    })
+
+    $('#game').on('click', '.robot', function () {
+      $(this).attr('src', './gas.png')
+      $(this).removeClass('robot').addClass('gas')
+      $(this).stop()
+      score += 5
+      $('.gas').fadeOut(2000)
+      $('#text-score').text(score)
+    })
+
+    $('#game').on('click', '.human', function () {
+      $(this).attr('src', './blood.png')
+      $(this).removeClass('human').addClass('blood')
+      $(this).stop()
+      if (score > 0) { score-- }
+      $('.blood').fadeOut(2000)
+      $('#text-score').text(score)
+    })
+  </script>
+</body>
+
+</html>
